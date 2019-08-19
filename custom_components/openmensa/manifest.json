@@ -1,0 +1,10 @@
+{
+    "domain": "openmensa",
+    "name": "Openmensa",
+    "documentation": "https://www.home-assistant.io/components/openmensa",
+    "requirements": [
+      "openmensa-api==1.1"
+    ],
+    "dependencies": [],
+    "codeowners": []
+  }
