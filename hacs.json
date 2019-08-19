@@ -1,0 +1,5 @@
+{
+  "name": "OpenMensa Sensor",
+  "render_readme": true,
+  "domains": ["sensor"]
+}
