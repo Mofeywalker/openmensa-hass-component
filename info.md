@@ -15,7 +15,7 @@ The sensor contains the data in its attributes. As each mensa has their own labe
 this sensor aggregates the meals per category. E.g. if your mensa has "Komplett Menü", "Vegetarisches Menü" and
 "Wahlessen", the attributes are build the following way:
 
-```json
+```python
 {
 	'komplett_menu': [{
 		'name': 'Frikadelle (Rind)'
