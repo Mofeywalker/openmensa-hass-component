@@ -1,0 +1,5 @@
+default_config:
+
+sensor:
+  platform: openmensa
+  code: 828
