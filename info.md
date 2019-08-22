@@ -11,26 +11,29 @@ The configuration key ```code``` is required. This code represents the id of you
 You can determine that key via the OpenMensa Website. If the Homepage of your Mensa is
 e.g. [https://openmensa.org/c/828](https://openmensa.org/c/828), then your code is ```828```.
 
-The sensor contains the data in its attributes. As each mensa has their own labeling for the meals they offer,
-this sensor aggregates the meals per category. E.g. if your mensa has "Komplett Menü", "Vegetarisches Menü" and
-"Wahlessen", the attributes are build the following way:
+The sensor contains the data in its attributes. As each mensa has their own labeling for the meals they offer, this sensor aggregates the categories and groups the meals per category.
+This allows to parse the data of every mensa in the same manner and also have to name of the
+category available.
 
 ```python
-{
-	'komplett_menu': [{
-		'name': 'Frikadelle (Rind)'
-	}],
-	'vegetarisches_menu': [{
-		'name': 'Bunter Salatteller'
-	}],
-	'wahlessen': [{
-		'name': 'Tortellini vegetarisch'
-	}, {
-		'name': 'Tagesessen: Nudelgratin'
-	}, {
-		'name': 'Big Bacon Burger'
+[{
+	'name': 'Komplett Menü',
+	'meals': [{
+		'name': 'Paniertes Putenschnitzel oder'
 	}]
-}
+}, {
+	'name': 'Vegetarisches Menü',
+	'meals': [{
+		'name': 'Gemüsefrikadelle'
+	}]
+}, {
+	'name': 'Wahlessen',
+	'meals': [{
+		'name': 'Gemüsereis'
+	}, {
+		'name': 'Flammkuchen mit Ziegenkäse, Honig und Rosmarin'
+	}]
+}]
 ```
 
 Use the Template engine to look at your mensa's meal categories with:
@@ -38,7 +41,12 @@ Use the Template engine to look at your mensa's meal categories with:
 {{states.sensor.openmensa_sensor.attributes}}
 ```
 
+To get the name of the first meal category, use the following template
+```
+{{states.sensor.openmensa_sensor.attributes.categories[0].name}}
+```
+
 To get e.g. the "Komplett Menü", use the following template:
 ```
-{{states.sensor.openmensa_sensor.attributes.komplett_menu[0].name}}
+{{states.sensor.openmensa_sensor.attributes.categories[0].meals[0].name}}
 ```

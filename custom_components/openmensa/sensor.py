@@ -1,4 +1,3 @@
-
 import logging
 from datetime import timedelta, datetime
 import unicodedata
@@ -18,21 +17,23 @@ MEAL_CATEGORY = "category"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 CONST_NAME = "name"
+CONST_MEALS = "meals"
 STATE_ONLINE = "online"
 
 ICON = "mdi:hamburger"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_CODE, default=CONF_DEFAULT_MENSA): cv.positive_int
-    }
+    {vol.Required(CONF_CODE, default=CONF_DEFAULT_MENSA): cv.positive_int}
 )
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     from openmensa import OpenMensa as om
+
     _LOGGER.debug("setup openmensa sensor")
     mensa = config.get(CONF_CODE)
     add_entities([OpenmensaSensor(om, mensa)], True)
+
 
 class OpenmensaSensor(Entity):
     """Representation of a Sensor."""
@@ -42,18 +43,28 @@ class OpenmensaSensor(Entity):
         self._om = om
         self._mensa = mensa
         self._state = STATE_UNAVAILABLE
-        self._essen = None
+        self._categories = None
+
+    def meal_category_from_categories_list(self, categories, search_category):
+        for category in categories:
+            if category[CONST_NAME] == search_category:
+                return category
+        return None
 
     def get_meals_of_the_day(self):
         date_str = datetime.now().strftime("%Y-%m-%d")
         meals = self._om.get_meals_by_day(self._mensa, date_str)
-        essen = {}
+        categories = []
         for meal in meals:
-            meal_category = self.normalize_string(meal[MEAL_CATEGORY])
-            if meal_category not in essen:
-                essen[meal_category] = []
-            essen[meal_category].append({"name": meal[CONST_NAME]})
-        return essen
+            meal_category = meal[MEAL_CATEGORY]
+            category = self.meal_category_from_categories_list(
+                categories, meal_category
+            )
+            if category is None:
+                category = {CONST_NAME: meal[MEAL_CATEGORY], CONST_MEALS: []}
+                categories.append(category)
+            category[CONST_MEALS].append({CONST_NAME: meal[CONST_NAME]})
+        return categories
 
     def normalize_string(self, my_string):
         """
@@ -61,11 +72,17 @@ class OpenmensaSensor(Entity):
         :param my_string:
         :return:
         """
-        return unicodedata.normalize('NFKD', my_string).encode('ASCII', 'ignore').decode().replace(" ", "_").lower()
+        return (
+            unicodedata.normalize("NFKD", my_string)
+            .encode("ASCII", "ignore")
+            .decode()
+            .replace(" ", "_")
+            .lower()
+        )
 
     @property
     def name(self):
-        return 'Openmensa Sensor'
+        return "Openmensa Sensor"
 
     @property
     def icon(self):
@@ -80,9 +97,7 @@ class OpenmensaSensor(Entity):
         if self._state == STATE_UNAVAILABLE:
             return {}
         attr = {}
-        for category in self._essen:
-            attr[category] = self._essen[category]
-
+        attr["categories"] = self._categories
         return attr
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -91,4 +106,4 @@ class OpenmensaSensor(Entity):
         """
         _LOGGER.debug("Updating meals of the day.")
         self._state = STATE_ONLINE
-        self._essen = self.get_meals_of_the_day()
+        self._categories = self.get_meals_of_the_day()
