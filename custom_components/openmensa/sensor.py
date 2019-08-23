@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta, datetime
 import unicodedata
+from urllib.error import HTTPError
 
 import voluptuous as vol
 
@@ -19,6 +20,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 CONST_NAME = "name"
 CONST_MEALS = "meals"
 STATE_ONLINE = "online"
+STATE_NO_MEALS = "no_meals"
 
 ICON = "mdi:hamburger"
 
@@ -53,17 +55,21 @@ class OpenmensaSensor(Entity):
 
     def get_meals_of_the_day(self):
         date_str = datetime.now().strftime("%Y-%m-%d")
-        meals = self._om.get_meals_by_day(self._mensa, date_str)
         categories = []
-        for meal in meals:
-            meal_category = meal[MEAL_CATEGORY]
-            category = self.meal_category_from_categories_list(
-                categories, meal_category
-            )
-            if category is None:
-                category = {CONST_NAME: meal[MEAL_CATEGORY], CONST_MEALS: []}
-                categories.append(category)
-            category[CONST_MEALS].append({CONST_NAME: meal[CONST_NAME]})
+        try:
+            meals = self._om.get_meals_by_day(self._mensa, date_str)
+            for meal in meals:
+                meal_category = meal[MEAL_CATEGORY]
+                category = self.meal_category_from_categories_list(
+                    categories, meal_category
+                )
+                if category is None:
+                    category = {CONST_NAME: meal[MEAL_CATEGORY], CONST_MEALS: []}
+                    categories.append(category)
+                category[CONST_MEALS].append({CONST_NAME: meal[CONST_NAME]})
+        except HTTPError:
+            self._state = STATE_NO_MEALS
+
         return categories
 
     def normalize_string(self, my_string):

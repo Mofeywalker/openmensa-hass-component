@@ -19,7 +19,7 @@ category available.
 [{
 	'name': 'Komplett Menü',
 	'meals': [{
-		'name': 'Paniertes Putenschnitzel oder'
+		'name': 'Paniertes Putenschnitzel'
 	}]
 }, {
 	'name': 'Vegetarisches Menü',
@@ -50,3 +50,5 @@ To get e.g. the "Komplett Menü", use the following template:
 ```
 {{states.sensor.openmensa_sensor.attributes.categories[0].meals[0].name}}
 ```
+
+The state of the sensor is set to ```no_meals``` if openmensa does not provide any information for the current day.
